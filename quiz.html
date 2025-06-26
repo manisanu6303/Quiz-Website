@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quiz</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Quiz Time</h2>
+    <div id="timer">Time Left: <span id="time">05:00</span></div>
+    <div id="quiz-box">
+      <h3 id="question">Loading Question...</h3>
+      <div id="options"></div>
+    </div>
+    <div class="navigation">
+      <button onclick="prevQuestion()">Previous</button>
+      <button onclick="nextQuestion()">Next</button>
+    </div>
+    <button onclick="submitQuiz()">Submit Quiz</button>
+    <div id="result" style="display:none;">
+      <h3>Your Score: <span id="score"></span></h3>
+      <button onclick="location.href='index.html'">Back to Home</button>
+    </div>
+<script>
+let questions = JSON.parse(localStorage.getItem('questions')) || [];
+let currentQuestion = 0;
+let selectedAnswers = {};
+let timerDuration = 5 * 60;
+let timer;
+
+function startTimer() {
+  timer = setInterval(() => {
+    const minutes = Math.floor(timerDuration / 60);
+    const seconds = timerDuration % 60;
+    document.getElementById('time').innerText = 
+      `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    timerDuration--;
+    if (timerDuration < 0) {
+      clearInterval(timer);
+      submitQuiz();
+    }
+  }, 1000);
+}
+
+function loadQuestion() {
+  if (questions.length === 0) {
+    document.getElementById('quiz-box').innerHTML = '<h3>No questions added by Admin.</h3>';
+    document.querySelector('.navigation').style.display = 'none';
+    return;
+  }
+  const q = questions[currentQuestion];
+  document.getElementById('question').innerText = `Q${currentQuestion + 1}: ${q.question}`;
+
+  const options = ['A', 'B', 'C', 'D'].map(opt => {
+    const optionText = q[`option${opt}`];
+    const isSelected = selectedAnswers[currentQuestion] === opt ? 'checked' : '';
+    return `
+      <div>
+        <input type="radio" name="option" id="opt${opt}" value="${opt}" ${isSelected}>
+        <label for="opt${opt}">${opt}: ${optionText}</label>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('options').innerHTML = options;
+}
+
+document.addEventListener('change', function(e) {
+  if (e.target.name === 'option') {
+    selectedAnswers[currentQuestion] = e.target.value;
+  }
+});
+
+function nextQuestion() {
+  if (currentQuestion < questions.length - 1) {
+    currentQuestion++;
+    loadQuestion();
+  }
+}
+
+function prevQuestion() {
+  if (currentQuestion > 0) {
+    currentQuestion--;
+    loadQuestion();
+  }
+}
+
+function submitQuiz() {
+  clearInterval(timer);
+  let score = 0;
+  questions.forEach((q, idx) => {
+    if (selectedAnswers[idx] === q.correct) {
+      score++;
+    }
+  });
+
+  const student = JSON.parse(localStorage.getItem('studentData')) || { name: 'Unknown' };
+  const record = {
+    name: student.name,
+    score: score,
+    total: questions.length,
+    date: new Date().toLocaleString()
+  };
+  const previousScores = JSON.parse(localStorage.getItem('scoreRecords')) || [];
+  previousScores.push(record);
+  localStorage.setItem('scoreRecords', JSON.stringify(previousScores));
+
+  const percentage = (score / questions.length) * 100;
+  let emojiMessage = '';
+  if (percentage >= 80) {
+    emojiMessage = '🏆 Excellent!';
+  } else {
+    emojiMessage = '💪 Keep Trying!';
+  }
+
+  document.getElementById('quiz-box').style.display = 'none';
+  document.querySelector('.navigation').style.display = 'none';
+  document.querySelector('button[onclick="submitQuiz()"]').style.display = 'none';
+
+  document.getElementById('result').style.display = 'block';
+  document.getElementById('score').innerText = `${score} / ${questions.length} (${Math.round(percentage)}%) ${emojiMessage}`;
+}
+
+loadQuestion();
+startTimer();
+</script>
+</body>
+</html>
