@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Score Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Score Dashboard</h2>
+    <div id="scoreList"></div>
+    <br>
+    <button onclick="clearScores()">Clear All Scores</button>
+    <button onclick="location.href='index.html'">Back to Home</button>
+  </div>
+<script>
+function loadScores() {
+  const scores = JSON.parse(localStorage.getItem('scoreRecords')) || [];
+  if (scores.length === 0) {
+    document.getElementById('scoreList').innerHTML = "<p>No scores recorded yet.</p>";
+    return;
+  }
+
+  let table = `
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Score</th>
+        <th>Total Questions</th>
+        <th>Date</th>
+      </tr>
+  `;
+
+  scores.forEach(score => {
+    table += `
+      <tr>
+        <td>${score.name}</td>
+        <td>${score.score}</td>
+        <td>${score.total}</td>
+        <td>${score.date}</td>
+      </tr>
+    `;
+  });
+
+  table += `</table>`;
+  document.getElementById('scoreList').innerHTML = table;
+}
+
+function clearScores() {
+  if (confirm('Are you sure you want to delete all scores?')) {
+    localStorage.removeItem('scoreRecords');
+    loadScores();
+  }
+}
+
+loadScores();
+</script>
+</body>
+</html>
