@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Login | Quiz App</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #56ccf2, #2f80ed);
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .login-box {
+      background-color: white;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      text-align: center;
+      width: 350px;
+    }
+    h2 {
+      color: #2f80ed;
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #2f80ed;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #1a64c7;
+    }
+    .error {
+      color: red;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-box">
+  <h2>Student Login</h2>
+
+  <input type="text" id="phone" placeholder="Enter Phone Number (+91...)" />
+  <div id="recaptcha-container"></div>
+  <button id="send-otp" onclick="sendOTP()">Send OTP</button>
+
+  <input type="text" id="otp" placeholder="Enter OTP" />
+  <button onclick="verifyOTP()">Verify & Login</button>
+
+  <div class="error" id="error"></div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCpAKZ3Z3rjVBqinm0uW-yZO7iIH7sNeGk",
+    authDomain: "quizappms.firebaseapp.com",
+    projectId: "quizappms",
+    storageBucket: "quizappms.appspot.com",
+    messagingSenderId: "619334780581",
+    appId: "quizappms"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  let confirmationResult;
+
+  // ✅ Initialize reCAPTCHA
+  window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('send-otp', {
+    'size': 'invisible',
+    'callback': (response) => {
+      // reCAPTCHA solved automatically
+    }
+  });
+
+  function sendOTP() {
+    const phone = document.getElementById('phone').value.trim();
+    const errorDiv = document.getElementById('error');
+    errorDiv.innerText = '';
+
+    if (!phone.startsWith('+')) {
+      errorDiv.innerText = "Phone number must include country code (e.g., +91)";
+      return;
+    }
+
+    const appVerifier = window.recaptchaVerifier;
+
+    auth.signInWithPhoneNumber(phone, appVerifier)
+      .then((result) => {
+        confirmationResult = result;
+        alert("OTP Sent!");
+      })
+      .catch((error) => {
+        console.error(error);
+        errorDiv.innerText = error.message;
+      });
+  }
+
+  function verifyOTP() {
+    const otp = document.getElementById('otp').value.trim();
+    const errorDiv = document.getElementById('error');
+    errorDiv.innerText = '';
+
+    if (!otp) {
+      errorDiv.innerText = "Please enter OTP.";
+      return;
+    }
+
+    confirmationResult.confirm(otp)
+      .then((result) => {
+        const user = result.user;
+        db.collection("users").doc(user.uid).get()
+          .then((docSnap) => {
+            if (docSnap.exists) {
+              window.location.href = 'student-dashboard.html';
+            } else {
+              window.location.href = 'profile-setup.html';
+            }
+          });
+      })
+      .catch((error) => {
+        console.error(error);
+        errorDiv.innerText = "Invalid OTP.";
+      });
+  }
+</script>
+
+</body>
+</html>
