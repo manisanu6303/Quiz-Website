@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #56ccf2, #2f80ed);
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    .header {
+      background: #1976D2;
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 {
+      margin: 0;
+    }
+    .profile-pic {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid white;
+      object-fit: cover;
+    }
+    .container {
+      text-align: center;
+      padding: 40px;
+      color: white;
+    }
+    button {
+      padding: 15px 30px;
+      margin: 10px;
+      background-color: white;
+      color: #1976D2;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background-color: #1976D2;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Student Dashboard</h1>
+    <img src="" id="profilePic" class="profile-pic" alt="Profile">
+  </div>
+
+  <div class="container">
+    <h2>Welcome to Your Dashboard</h2>
+    <p id="statusInfo">Checking payment and trial status...</p>
+
+    <button onclick="location.href='quiz.html'">Start Quiz</button>
+    <button onclick="location.href='score-dashboard.html'">View Scores</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCpAKZ3Z3rjVBqinm0uW-yZO7iIH7sNeGk",
+      authDomain: "quizappms.firebaseapp.com",
+      projectId: "quizappms",
+      storageBucket: "quizappms.appspot.com",
+      messagingSenderId: "619334780581",
+      appId: "quizappms"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        const uid = user.uid;
+        db.collection("users").doc(uid).get().then(doc => {
+          if (doc.exists) {
+            const data = doc.data();
+            const profilePic = data.profilePic || 'https://via.placeholder.com/50'; // Default if no pic
+            document.getElementById('profilePic').src = profilePic;
+
+            const trial = data.trialStatus;
+            const payment = data.paymentStatus;
+            const expiry = data.accessExpiry ? new Date(data.accessExpiry.seconds * 1000) : null;
+
+            let status = '';
+            if (payment === "paid") {
+              status = "✅ Paid Access";
+              if (expiry) {
+                status += ` (Valid till: ${expiry.toDateString()})`;
+              }
+            } else if (trial === "active") {
+              status = "🆓 Trial Active";
+            } else {
+              status = "❌ No active access. Please make payment.";
+            }
+
+            document.getElementById('statusInfo').innerText = status;
+          }
+        });
+      } else {
+        window.location.href = "student-login.html";
+      }
+    });
+
+    function logout() {
+      auth.signOut().then(() => {
+        window.location.href = "student-login.html";
+      });
+    }
+  </script>
+
+</body>
+</html>
