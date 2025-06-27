@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quiz</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #56ccf2, #2f80ed);
+      font-family: Arial, sans-serif;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    .container {
+      background-color: white;
+      color: #333;
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 800px;
+      margin: auto;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+    h1 {
+      color: #2f80ed;
+    }
+    .question {
+      font-size: 20px;
+      margin: 15px 0;
+    }
+    .options label {
+      display: block;
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 10px;
+      margin: 8px;
+      cursor: pointer;
+    }
+    .options input {
+      margin-right: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 30px;
+      margin: 10px;
+      background-color: #2f80ed;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #1a64c7;
+    }
+    #timer {
+      background: #2f80ed;
+      color: white;
+      display: inline-block;
+      padding: 8px 15px;
+      border-radius: 20px;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>📝 Quiz</h1>
+  <div id="timer">Time: 00:00</div>
+  <div id="quizBox">Loading Quiz...</div>
+  <div>
+    <button onclick="prevQuestion()">Previous</button>
+    <button onclick="nextQuestion()">Next</button>
+    <button onclick="submitQuiz()">Submit</button>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, getDocs, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCpAKZ3Z3rjVBqinm0uW-yZO7iIH7sNeGk",
+    authDomain: "quizappms.firebaseapp.com",
+    projectId: "quizappms",
+    storageBucket: "quizappms.appspot.com",
+    messagingSenderId: "619334780581",
+    appId: "quizappms"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let questions = [];
+  let current = 0;
+  let answers = {};
+  let timer;
+  let seconds = 0;
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const accessRef = doc(db, "quizStatus", "access");
+      const accessSnap = await getDoc(accessRef);
+
+      if (accessSnap.exists() && !accessSnap.data().isActive) {
+        alert("Quiz is not currently available. Please check back later.");
+        window.location.href = "student-dashboard.html";
+        return;
+      }
+
+      loadQuestions();
+    } else {
+      alert("Please login.");
+      window.location.href = "student-login.html";
+    }
+  });
+
+  async function loadQuestions() {
+    const querySnapshot = await getDocs(collection(db, "questions"));
+    questions = [];
+    querySnapshot.forEach(doc => {
+      questions.push({ id: doc.id, ...doc.data() });
+    });
+
+    if (questions.length === 0) {
+      document.getElementById('quizBox').innerHTML = "No questions available.";
+    } else {
+      startTimer();
+      showQuestion();
+    }
+  }
+
+  function showQuestion() {
+    const q = questions[current];
+    const quizBox = document.getElementById('quizBox');
+
+    const optionsHTML = q.options.map((opt, idx) => `
+      <label>
+        <input type="radio" name="option" value="${idx}" ${answers[q.id] == idx ? 'checked' : ''} />
+        ${opt}
+      </label>
+    `).join('');
+
+    quizBox.innerHTML = `
+      <div class="question">${current + 1}. ${q.question}</div>
+      <div class="options">${optionsHTML}</div>
+    `;
+  }
+
+  function nextQuestion() {
+    saveAnswer();
+    if (current < questions.length - 1) {
+      current++;
+      showQuestion();
+    }
+  }
+
+  function prevQuestion() {
+    saveAnswer();
+    if (current > 0) {
+      current--;
+      showQuestion();
+    }
+  }
+
+  function saveAnswer() {
+    const q = questions[current];
+    const selected = document.querySelector('input[name="option"]:checked');
+    if (selected) {
+      answers[q.id] = selected.value;
+    }
+  }
+
+  function submitQuiz() {
+    saveAnswer();
+
+    let score = 0;
+    questions.forEach(q => {
+      if (answers[q.id] == q.answer) {
+        score++;
+      }
+    });
+
+    const percentage = Math.round((score / questions.length) * 100);
+
+    saveResult(score, percentage);
+  }
+
+  async function saveResult(score, percentage) {
+    const user = auth.currentUser;
+    await setDoc(doc(db, "scores", user.uid + "_" + Date.now()), {
+      userId: user.uid,
+      score: score,
+      percentage: percentage,
+      total: questions.length,
+      timestamp: serverTimestamp()
+    });
+
+    window.location.href = 'score-dashboard.html';
+  }
+
+  function startTimer() {
+    timer = setInterval(() => {
+      seconds++;
+      const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+      const secs = String(seconds % 60).padStart(2, '0');
+      document.getElementById('timer').innerText = `Time: ${mins}:${secs}`;
+    }, 1000);
+  }
+</script>
+
+</body>
+</html>
