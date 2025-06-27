@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration - Quiz App</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins&display=swap">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, #a8e063, #56ab2f);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .register-box {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 450px;
+        }
+        .register-box h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+        }
+        .register-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .register-box button {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .register-box button:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: red;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .success {
+            color: green;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="register-box">
+        <h2>Create Student Account</h2>
+        <div class="error" id="error"></div>
+        <div class="success" id="success"></div>
+        <input type="text" id="username" placeholder="Create Username" required>
+        <input type="password" id="password" placeholder="Create Password" required>
+        <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+        <button onclick="register()">Register</button>
+    </div>
+
+    <!-- Firebase Configuration -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCpAKZ3Z3rjVBqinm0uW-yZO7iIH7sNeGk",
+            authDomain: "quizappms.firebaseapp.com",
+            databaseURL: "https://quizappms.firebaseio.com",
+            projectId: "quizappms",
+            storageBucket: "quizappms.appspot.com",
+            messagingSenderId: "619334780581",
+            appId: "quizappms"
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+    </script>
+
+    <!-- Registration Script -->
+    <script>
+        function register() {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const confirmPassword = document.getElementById("confirmPassword").value.trim();
+            const errorDiv = document.getElementById("error");
+            const successDiv = document.getElementById("success");
+
+            errorDiv.innerText = "";
+            successDiv.innerText = "";
+
+            if (username === "" || password === "" || confirmPassword === "") {
+                errorDiv.innerText = "Please fill all fields.";
+                return;
+            }
+
+            if (password.length < 6) {
+                errorDiv.innerText = "Password must be at least 6 characters.";
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                errorDiv.innerText = "Passwords do not match.";
+                return;
+            }
+
+            // Check if username already exists
+            database.ref('students/' + username).get().then((snapshot) => {
+                if (snapshot.exists()) {
+                    errorDiv.innerText = "Username already exists. Try another.";
+                } else {
+                    // Save user data
+                    database.ref('students/' + username).set({
+                        username: username,
+                        password: password,
+                        payment_status: "trial"
+                    }).then(() => {
+                        successDiv.innerText = "Registration Successful!";
+                        setTimeout(() => {
+                            window.location.href = "student_login.html";
+                        }, 1500);
+                    }).catch((error) => {
+                        console.error(error);
+                        errorDiv.innerText = "Error occurred. Try again.";
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>
