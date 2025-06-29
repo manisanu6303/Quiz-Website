@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Questions | Quiz App</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #4facfe, #00f2fe);
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 {
+      text-align: center;
+      color: #1976D2;
+    }
+    .form-section, .question-list {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      margin-bottom: 30px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      background-color: #1976D2;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background-color: #125a9c;
+    }
+    .question-item {
+      background: #f5f5f5;
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Manage Questions</h1>
+
+<div class="form-section">
+  <h3>Add / Update Question</h3>
+  <input type="text" id="question" placeholder="Enter question">
+  <input type="text" id="optionA" placeholder="Option A">
+  <input type="text" id="optionB" placeholder="Option B">
+  <input type="text" id="optionC" placeholder="Option C">
+  <input type="text" id="optionD" placeholder="Option D">
+  <input type="text" id="correct" placeholder="Correct Answer (A/B/C/D)">
+  <button onclick="addQuestion()">Add Question</button>
+</div>
+
+<div class="question-list">
+  <h3>Existing Questions</h3>
+  <div id="questions"></div>
+</div>
+
+<div style="text-align: center;">
+  <button onclick="location.href='admin-dashboard.html'">Back to Dashboard</button>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCpAKZ3Z3rjVBqinm0uW-yZO7iIH7sNeGk",
+    authDomain: "quizappms.firebaseapp.com",
+    projectId: "quizappms",
+    storageBucket: "quizappms.appspot.com",
+    messagingSenderId: "619334780581",
+    appId: "quizappms"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // Authentication Check
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      if (user.email !== "admin@example.com") {
+        alert("Access Denied! Not an Admin.");
+        window.location.href = "index.html";
+      } else {
+        loadQuestions();
+      }
+    } else {
+      window.location.href = "admin-login.html";
+    }
+  });
+
+  function addQuestion() {
+    const question = document.getElementById('question').value;
+    const optionA = document.getElementById('optionA').value;
+    const optionB = document.getElementById('optionB').value;
+    const optionC = document.getElementById('optionC').value;
+    const optionD = document.getElementById('optionD').value;
+    const correct = document.getElementById('correct').value.toUpperCase();
+
+    if (!question || !optionA || !optionB || !optionC || !optionD || !correct) {
+      alert("Please fill all fields.");
+      return;
+    }
+
+    db.collection("questions").add({
+      question,
+      optionA,
+      optionB,
+      optionC,
+      optionD,
+      correct
+    }).then(() => {
+      alert("Question added.");
+      clearForm();
+      loadQuestions();
+    });
+  }
+
+  function loadQuestions() {
+    const questionsDiv = document.getElementById('questions');
+    questionsDiv.innerHTML = '';
+
+    db.collection("questions").get().then(snapshot => {
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const div = document.createElement('div');
+        div.className = 'question-item';
+        div.innerHTML = `
+          <strong>Q:</strong> ${data.question}<br>
+          A: ${data.optionA} | B: ${data.optionB} | C: ${data.optionC} | D: ${data.optionD}<br>
+          <strong>Correct:</strong> ${data.correct}<br>
+          <button onclick="deleteQuestion('${doc.id}')">Delete</button>
+        `;
+        questionsDiv.appendChild(div);
+      });
+    });
+  }
+
+  function deleteQuestion(id) {
+    if (confirm("Delete this question?")) {
+      db.collection("questions").doc(id).delete().then(() => {
+        alert("Deleted.");
+        loadQuestions();
+      });
+    }
+  }
+
+  function clearForm() {
+    document.getElementById('question').value = '';
+    document.getElementById('optionA').value = '';
+    document.getElementById('optionB').value = '';
+    document.getElementById('optionC').value = '';
+    document.getElementById('optionD').value = '';
+    document.getElementById('correct').value = '';
+  }
+
+  function logout() {
+    auth.signOut().then(() => {
+      window.location.href = "admin-login.html";
+    });
+  }
+</script>
+
+</body>
+</html>
