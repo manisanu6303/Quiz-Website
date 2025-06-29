@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Setup | Quiz App</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #56ccf2, #2f80ed);
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .profile-box {
+      background-color: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      width: 400px;
+      text-align: center;
+    }
+    h2 {
+      color: #2f80ed;
+      margin-bottom: 20px;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #2f80ed;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #1a64c7;
+    }
+    .profile-preview {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #2f80ed;
+      margin-bottom: 10px;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+<div class="profile-box">
+  <h2>Profile Setup</h2>
+
+  <img src="https://via.placeholder.com/100" id="preview" class="profile-preview"><br>
+  <input type="file" id="profilePicInput" accept="image/*"><br>
+
+  <input type="text" id="name" placeholder="Full Name">
+  <input type="email" id="email" placeholder="Email">
+  <input type="text" id="mobile" placeholder="Mobile Number">
+
+  <select id="country">
+    <option value="">Select Country</option>
+    <option>India</option>
+    <option>United States</option>
+    <option>United Kingdom</option>
+    <option>Australia</option>
+    <option>Canada</option>
+    <option>Other</option>
+  </select>
+
+  <select id="part">
+    <option value="">Select Part</option>
+    <option>Part-1</option>
+    <option>Part-2</option>
+    <option>Part-3</option>
+  </select>
+
+  <button onclick="saveProfile()">Save Profile</button>
+  <div class="error" id="error"></div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCpAKZ3Z3rjVBqinm0uW-yZO7iIH7sNeGk",
+    authDomain: "quizappms.firebaseapp.com",
+    projectId: "quizappms",
+    storageBucket: "quizappms.appspot.com",
+    messagingSenderId: "619334780581",
+    appId: "quizappms"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const storage = firebase.storage();
+
+  const studentId = localStorage.getItem('studentId');
+  const username = localStorage.getItem('username');
+  const preview = document.getElementById('preview');
+  const fileInput = document.getElementById('profilePicInput');
+  const errorDiv = document.getElementById('error');
+
+  if (!studentId || !username) {
+    window.location.href = "student-login.html";
+  }
+
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      preview.src = URL.createObjectURL(file);
+    }
+  });
+
+  function saveProfile() {
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const mobile = document.getElementById('mobile').value.trim();
+    const country = document.getElementById('country').value;
+    const part = document.getElementById('part').value;
+    const file = fileInput.files[0];
+
+    errorDiv.innerText = '';
+
+    if (!name || !email || !mobile || !country || !part) {
+      errorDiv.innerText = "Please fill all fields.";
+      return;
+    }
+
+    const docRef = db.collection("students").doc(studentId);
+
+    if (file) {
+      const storageRef = storage.ref().child(`profilePics/${studentId}`);
+      storageRef.put(file).then(snapshot => {
+        snapshot.ref.getDownloadURL().then(url => {
+          saveToFirestore(docRef, name, email, mobile, country, part, url);
+        });
+      });
+    } else {
+      saveToFirestore(docRef, name, email, mobile, country, part, '');
+    }
+  }
+
+  function saveToFirestore(docRef, name, email, mobile, country, part, profilePicUrl) {
+    docRef.update({
+      name,
+      email,
+      mobile,
+      country,
+      partAccess: [part],
+      profilePic: profilePicUrl,
+      trialStatus: 'active',
+      paymentStatus: 'unpaid',
+      profileCompleted: true,
+      createdAt: new Date()
+    }).then(() => {
+      alert("Profile Saved Successfully.");
+      window.location.href = "payment.html";
+    });
+  }
+</script>
+
+</body>
+</html>
