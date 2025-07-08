@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Registration - QuizAppMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: 'Calibri', sans-serif;
+      font-size: 12px;
+      background: linear-gradient(to right, #d4fcd9, #b6f5cc);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .register-box {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 420px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #2d7f4f;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #45a049;
+    }
+
+    .error {
+      color: red;
+      font-size: 12px;
+      margin-top: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="register-box">
+    <h2>Register</h2>
+    <input type="text" id="username" placeholder="Create Username" />
+    <input type="password" id="password" placeholder="Create Password" />
+    <input type="password" id="confirmPassword" placeholder="Confirm Password" />
+    <input type="email" id="email" placeholder="Registered Email" />
+    <button class="btn" onclick="registerStudent()">Register</button>
+    <p class="error" id="error"></p>
+  </div>
+
+  <!-- Firebase (Compat SDKs) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="firebase.js"></script>
+
+  <script>
+    function registerStudent() {
+      const username = document.getElementById("username").value.trim().toLowerCase();
+      const password = document.getElementById("password").value.trim();
+      const confirmPassword = document.getElementById("confirmPassword").value.trim();
+      const email = document.getElementById("email").value.trim().toLowerCase();
+      const error = document.getElementById("error");
+
+      if (!username || !password || !confirmPassword || !email) {
+        error.textContent = "All fields are required.";
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        error.textContent = "Passwords do not match.";
+        return;
+      }
+
+      const db = firebase.firestore();
+      db.collection("students").where("username", "==", username).get()
+        .then(snapshot => {
+          if (!snapshot.empty) {
+            error.textContent = "Username already taken.";
+            return;
+          }
+
+          firebase.auth().createUserWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+              const uid = userCredential.user.uid;
+              return db.collection("students").doc(uid).set({
+                username: username,
+                email: email,
+                uid: uid
+              });
+            })
+            .then(() => {
+              location.href = "profile-setup.html";
+            })
+            .catch(err => {
+              error.textContent = err.message;
+            });
+        })
+        .catch(err => {
+          error.textContent = "Error checking username.";
+        });
+    }
+  </script>
+</body>
+</html>
