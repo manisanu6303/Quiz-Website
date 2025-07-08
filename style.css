@@ -1,0 +1,146 @@
+/* style.css for the complete Quiz App */
+
+body {
+  font-family: 'Calibri', sans-serif;
+  font-size: 12px;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(to right, #d4fcd9, #b6f5cc);
+}
+
+.container, .dashboard, .payment-box, .quiz-box, .admin-panel {
+  max-width: 1000px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+h1, h2, h3, h4 {
+  text-align: center;
+  color: #2d7f4f;
+  margin-top: 0;
+}
+
+input, select, textarea, button {
+  width: 100%;
+  padding: 8px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+button {
+  background-color: #4CAF50;
+  color: white;
+  cursor: pointer;
+  border: none;
+  transition: background 0.3s ease;
+}
+
+button:hover {
+  background-color: #3d9442;
+}
+
+.profile-pic {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #4CAF50;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.info-box {
+  line-height: 1.8;
+}
+
+.info-label {
+  font-weight: bold;
+  color: #333;
+}
+
+.btn-green {
+  background-color: #4CAF50;
+  color: white;
+  border-radius: 10px;
+  padding: 10px 16px;
+}
+
+.btn-green:hover {
+  background-color: #3d9442;
+}
+
+.upgrade {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.option-box, .question-box {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  margin: 10px 0;
+  background-color: #f9f9f9;
+}
+
+.correct-answer {
+  color: green;
+  font-weight: bold;
+}
+
+.mcq-item {
+  background: #f2fff4;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+}
+
+.mcq-actions {
+  margin-top: 10px;
+  text-align: right;
+}
+
+.timer {
+  text-align: right;
+  font-weight: bold;
+  color: #d9534f;
+}
+
+.nav-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.nav-buttons button {
+  width: 120px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .container, .dashboard, .payment-box {
+    margin: 20px;
+    padding: 20px;
+  }
+
+  .profile-pic {
+    width: 40px;
+    height: 40px;
+  }
+
+  .nav-buttons button {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  .nav-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+}
