@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Quiz - QuizAppMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: 'Calibri', sans-serif;
+      font-size: 12px;
+      background: linear-gradient(to right, #d4fcd9, #b6f5cc);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .quiz-container {
+      max-width: 720px;
+      margin: auto;
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .question-box {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .option {
+      margin: 8px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .option:hover {
+      background-color: #eaffea;
+    }
+
+    .navigation {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      font-size: 14px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-green {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    #timer {
+      text-align: right;
+      font-weight: bold;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <div id="timer">Time Left: <span id="time">--:--</span></div>
+    <div id="questionBox" class="question-box">Loading question...</div>
+
+    <div class="navigation">
+      <button class="btn btn-green" onclick="prevQuestion()">Previous</button>
+      <button class="btn btn-green" onclick="nextQuestion()">Next</button>
+      <button class="btn btn-green" onclick="submitQuiz()">Submit</button>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        q: "What is the capital of India?",
+        options: ["Delhi", "Mumbai", "Kolkata", "Chennai"],
+        correct: 0
+      },
+      {
+        q: "Which tax is direct?",
+        options: ["Income Tax", "GST", "Customs", "Sales Tax"],
+        correct: 0
+      },
+      {
+        q: "2 + 2 equals?",
+        options: ["3", "4", "5", "6"],
+        correct: 1
+      }
+    ];
+
+    const totalQuizTime = 5 * 60; // 5 minutes
+    let timeLeft = totalQuizTime;
+    let current = 0;
+    const answers = new Array(questions.length).fill(null);
+
+    const timerElement = document.getElementById("time");
+
+    function updateTimer() {
+      const min = Math.floor(timeLeft / 60);
+      const sec = timeLeft % 60;
+      timerElement.textContent = `${min}:${sec < 10 ? "0" + sec : sec}`;
+      if (timeLeft > 0) {
+        timeLeft--;
+      } else {
+        submitQuiz();
+      }
+    }
+
+    setInterval(updateTimer, 1000);
+    renderQuestion();
+
+    function renderQuestion() {
+      const q = questions[current];
+      const box = document.getElementById("questionBox");
+      box.innerHTML = `<b>Q${current + 1}:</b> ${q.q}<br/>` +
+        q.options.map((opt, idx) => `
+          <div class="option" onclick="selectOption(${idx})" style="background: ${
+            answers[current] === idx ? '#c4f7c6' : '#fff'
+          }">${opt}</div>`).join('');
+    }
+
+    function selectOption(index) {
+      answers[current] = index;
+      renderQuestion();
+    }
+
+    function nextQuestion() {
+      if (current < questions.length - 1) {
+        current++;
+        renderQuestion();
+      }
+    }
+
+    function prevQuestion() {
+      if (current > 0) {
+        current--;
+        renderQuestion();
+      }
+    }
+
+    function submitQuiz() {
+      let score = 0;
+      questions.forEach((q, i) => {
+        if (answers[i] === q.correct) score++;
+      });
+      sessionStorage.setItem("score", score);
+      sessionStorage.setItem("total", questions.length);
+      window.location.href = "score-dashboard.html";
+    }
+  </script>
+</body>
+</html>

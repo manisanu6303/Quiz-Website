@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Upload MCQs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Calibri', sans-serif;
+      font-size: 12px;
+      background: linear-gradient(to right, #d4fcd9, #b6f5cc);
+      padding: 30px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    textarea {
+      width: 100%;
+      height: 250px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #3d9442;
+    }
+
+    .status {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>📥 Bulk Upload MCQs</h2>
+    <p>Paste your MCQs in JSON array format below:</p>
+    <textarea id="jsonInput" placeholder='[{"part": "Part 1", "chapter": "Intro", "question": "Q?", "A": "a", "B": "b", "C": "c", "D": "d", "correct": "A"}]'></textarea>
+    <button onclick="uploadMCQs()">Upload</button>
+    <div class="status" id="statusMsg"></div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+
+  <!-- Your Firebase Config -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCpAKZ3Z3rjVBqinm0uW-yZO7iIH7sNeGk",
+      authDomain: "quizappms.firebaseapp.com",
+      projectId: "quizappms",
+      storageBucket: "quizappms.firebasestorage.app",
+      messagingSenderId: "619334780581",
+      appId: "1:619334780581:web:7e2c456372389fa2b7ef4c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
+  <script>
+    async function uploadMCQs() {
+      const status = document.getElementById('statusMsg');
+      status.textContent = '';
+      try {
+        const raw = document.getElementById('jsonInput').value;
+        const mcqs = JSON.parse(raw);
+        let count = 0;
+
+        for (const mcq of mcqs) {
+          if (!mcq.part || !mcq.chapter || !mcq.question || !mcq.correct) continue;
+
+          await db.collection("mcq").add({
+            ...mcq,
+            correct: mcq.correct.toUpperCase(),
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          count++;
+        }
+
+        status.textContent = `✅ Successfully uploaded ${count} MCQs.`;
+      } catch (e) {
+        status.textContent = `❌ Error: ${e.message}`;
+      }
+    }
+  </script>
+</body>
+</html>

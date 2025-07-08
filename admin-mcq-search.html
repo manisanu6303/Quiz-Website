@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MCQ Search - Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Calibri', sans-serif;
+      font-size: 12px;
+      background: linear-gradient(to right, #d4fcd9, #b6f5cc);
+      padding: 20px;
+      margin: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #2d7f4f;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 12px;
+    }
+
+    .btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .btn:hover {
+      background-color: #3d9442;
+    }
+
+    .mcq-list {
+      margin-top: 30px;
+    }
+
+    .mcq-item {
+      background: #f2fff4;
+      border: 1px solid #ccc;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .mcq-actions {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🔍 MCQ Search Tool</h2>
+
+    <label for="part">Select Part</label>
+    <select id="part">
+      <option value="">-- All Parts --</option>
+      <option value="Part 1">PART 1 – Individual Taxation</option>
+      <option value="Part 2">PART 2 – Business Taxation</option>
+      <option value="Part 3">PART 3 – Representation, Practice, and Procedures</option>
+    </select>
+
+    <label for="chapter">Chapter Name</label>
+    <input type="text" id="chapter" placeholder="e.g., Chapter 1" />
+
+    <label for="keyword">Search Keyword (in question)</label>
+    <input type="text" id="keyword" placeholder="e.g., depreciation" />
+
+    <button class="btn" onclick="searchMcqs()">🔍 Search</button>
+
+    <div class="mcq-list" id="mcqList"></div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+  <script src="firebase.js"></script>
+
+  <script>
+    const db = firebase.firestore();
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (!user) return location.href = "admin-login.html";
+    });
+
+    async function searchMcqs() {
+      const part = document.getElementById("part").value;
+      const chapter = document.getElementById("chapter").value.toLowerCase();
+      const keyword = document.getElementById("keyword").value.toLowerCase();
+      const mcqList = document.getElementById("mcqList");
+      mcqList.innerHTML = "Loading...";
+
+      let query = db.collection("mcq");
+      if (part) query = query.where("part", "==", part);
+
+      const snapshot = await query.orderBy("createdAt", "desc").get();
+      let results = [];
+
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const matchesChapter = chapter ? d.chapter?.toLowerCase().includes(chapter) : true;
+        const matchesKeyword = keyword ? d.question?.toLowerCase().includes(keyword) : true;
+        if (matchesChapter && matchesKeyword) {
+          results.push({ id: doc.id, ...d });
+        }
+      });
+
+      mcqList.innerHTML = "";
+      if (results.length === 0) {
+        mcqList.innerHTML = "<p>No results found.</p>";
+        return;
+      }
+
+      results.forEach(d => {
+        const div = document.createElement("div");
+        div.className = "mcq-item";
+        div.innerHTML = `
+          <strong>${d.part} – ${d.chapter}</strong><br>
+          ${d.question}<br>
+          A: ${d.A}<br>
+          B: ${d.B}<br>
+          C: ${d.C}<br>
+          D: ${d.D}<br>
+          <b>Correct: ${d.correct}</b>
+          <div class="mcq-actions">
+            <button class="btn" onclick="deleteMcq('${d.id}')">🗑️ Delete</button>
+          </div>
+        `;
+        mcqList.appendChild(div);
+      });
+    }
+
+    function deleteMcq(id) {
+      if (confirm("Delete this question?")) {
+        db.collection("mcq").doc(id).delete().then(searchMcqs);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Calibri', sans-serif;
+      font-size: 12px;
+      background: linear-gradient(to right, #d4fcd9, #b6f5cc);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .dashboard {
+      max-width: 1000px;
+      margin: auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      position: relative;
+    }
+
+    .profile-pic {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #4CAF50;
+    }
+
+    h2 {
+      text-align: center;
+      color: #2d7f4f;
+      margin-top: 0;
+    }
+
+    .info-box {
+      margin-top: 20px;
+      line-height: 1.8;
+    }
+
+    .info-label {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .upgrade {
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    .upgrade button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .upgrade button:hover {
+      background-color: #3d9442;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <img id="profilePic" class="profile-pic" src="" alt="Profile Picture" />
+    <h2>🎓 Student Dashboard</h2>
+
+    <div class="info-box" id="studentInfo"></div>
+
+    <div class="upgrade" id="upgradeBtn" style="display:none">
+      <button onclick="upgradeNow()">🔄 Upgrade to Paid</button>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+
+  <!-- Firebase Config -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCpAKZ3Z3rjVBqinm0uW-yZO7iIH7sNeGk",
+      authDomain: "quizappms.firebaseapp.com",
+      projectId: "quizappms",
+      storageBucket: "quizappms.firebasestorage.app",
+      messagingSenderId: "619334780581",
+      appId: "1:619334780581:web:7e2c456372389fa2b7ef4c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
+  <script>
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user) return location.href = "student-login.html";
+
+      const doc = await db.collection("students").doc(user.uid).get();
+      const data = doc.data();
+
+      document.getElementById("studentInfo").innerHTML = `
+        <div><span class="info-label">👤 Name:</span> ${data.name}</div>
+        <div><span class="info-label">📧 Email:</span> ${data.email}</div>
+        <div><span class="info-label">📱 Mobile:</span> ${data.mobile}</div>
+        <div><span class="info-label">🌍 Country:</span> ${data.country}</div>
+        <div><span class="info-label">📚 Part:</span> ${data.part}</div>
+        <div><span class="info-label">💳 Subscription:</span> ${data.subscription === "free" ? "Free Trial" : "Paid"}</div>
+      `;
+
+      if (data.photoURL) {
+        document.getElementById("profilePic").src = data.photoURL;
+      }
+
+      if (data.subscription === "free") {
+        document.getElementById("upgradeBtn").style.display = "block";
+        window.studentPart = data.part;
+        window.studentCountry = data.country;
+      }
+    });
+
+    function upgradeNow() {
+      const url = `payment.html?upgrade=true&part=${encodeURIComponent(studentPart)}&country=${encodeURIComponent(studentCountry)}`;
+      location.href = url;
+    }
+  </script>
+</body>
+</html>

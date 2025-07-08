@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Choose Practice Mode - QuizAppMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Calibri', sans-serif;
+      font-size: 12px;
+      background: linear-gradient(to right, #d4fcd9, #b6f5cc);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    h2 {
+      color: #2d7f4f;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #3d9442;
+    }
+
+    .question-options {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .number-boxes {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .number-box {
+      width: 60px;
+      height: 40px;
+      background-color: #e0f5e7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      border: 1px solid #4CAF50;
+    }
+
+    .number-box:hover {
+      background-color: #c6efd6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>How do you want to practice?</h2>
+
+    <button class="btn" onclick="selectMode('chapter')">Chapter-wise</button>
+    <button class="btn" onclick="selectMode('random')">Random</button>
+
+    <div class="question-options" id="questionOptions">
+      <p><b>How many questions do you want to practice?</b></p>
+      <div class="number-boxes">
+        <div class="number-box" onclick="startQuiz(10)">10</div>
+        <div class="number-box" onclick="startQuiz(20)">20</div>
+        <div class="number-box" onclick="startQuiz(50)">50</div>
+        <div class="number-box" onclick="startQuiz(70)">70</div>
+        <div class="number-box" onclick="startQuiz(100)">100</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function selectMode(mode) {
+      if (mode === 'chapter') {
+        // Redirect to chapter-wise quiz page
+        window.location.href = "quiz-chapter-wise.html";
+      } else {
+        document.getElementById("questionOptions").style.display = "block";
+      }
+    }
+
+    function startQuiz(count) {
+      // Save selected count in localStorage or session for quiz use
+      localStorage.setItem("randomCount", count);
+      window.location.href = "quiz-random.html";
+    }
+  </script>
+</body>
+</html>

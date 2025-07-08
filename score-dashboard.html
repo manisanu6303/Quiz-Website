@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Score Dashboard - QuizAppMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Calibri', sans-serif;
+      font-size: 12px;
+      background: linear-gradient(to right, #d4fcd9, #b6f5cc);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .score-box {
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      color: #2d7f4f;
+      margin-bottom: 20px;
+    }
+
+    .score {
+      font-size: 24px;
+      color: #333;
+      margin: 10px 0;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="score-box">
+    <h2>Quiz Completed!</h2>
+    <p class="score">Your Score: <span id="score">--</span> / <span id="total">--</span></p>
+    <button class="btn" onclick="goToDashboard()">Back to Dashboard</button>
+  </div>
+
+  <script>
+    document.getElementById("score").textContent = sessionStorage.getItem("score") || "0";
+    document.getElementById("total").textContent = sessionStorage.getItem("total") || "0";
+
+    function goToDashboard() {
+      location.href = "student-dashboard.html";
+    }
+  </script>
+</body>
+</html>

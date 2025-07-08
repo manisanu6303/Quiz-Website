@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Random Quiz - QuizAppMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Calibri', sans-serif;
+      font-size: 12px;
+      background: linear-gradient(to right, #d4fcd9, #b6f5cc);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .quiz-container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .timer {
+      font-size: 16px;
+      color: #d9534f;
+      text-align: right;
+      margin-bottom: 20px;
+    }
+
+    .question-box {
+      font-size: 16px;
+      margin-bottom: 20px;
+      background: #e9f9ee;
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    .option-box {
+      margin-bottom: 12px;
+      background-color: #f2fff4;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+
+    .option-box:hover {
+      background-color: #cdeed6;
+    }
+
+    .navigation {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #3d9442;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <div class="timer" id="timer">Time Left: 00:00</div>
+    <div class="question-box" id="questionBox">Loading question...</div>
+    <div id="optionsContainer"></div>
+
+    <div class="navigation">
+      <button class="btn" onclick="prevQuestion()">Previous</button>
+      <button class="btn" onclick="nextQuestion()">Next</button>
+      <button class="btn" onclick="submitQuiz()">Submit</button>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+  <script src="firebase.js"></script>
+
+  <script>
+    const db = firebase.firestore();
+    let questions = [];
+    let current = 0;
+    let answers = {};
+    let quizTime = 600; // seconds (10 mins)
+    let interval;
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user) return location.href = "student-login.html";
+
+      const studentRef = await db.collection("students").doc(user.uid).get();
+      const student = studentRef.data();
+      const paidParts = student.paidParts || [];
+
+      if (paidParts.length === 0) {
+        alert("You have no active paid part access.");
+        return (location.href = "payment-summary.html");
+      }
+
+      const part = paidParts[0]; // Assume one part for now
+      const count = parseInt(localStorage.getItem("randomCount")) || 10;
+
+      const snapshot = await db.collection("mcq")
+        .where("part", "==", part)
+        .orderBy("createdAt", "desc")
+        .limit(count)
+        .get();
+
+      questions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      if (questions.length === 0) {
+        document.getElementById("questionBox").textContent = "No questions available.";
+        return;
+      }
+
+      showQuestion();
+      startTimer();
+    });
+
+    function showQuestion() {
+      const q = questions[current];
+      document.getElementById("questionBox").textContent = `Q${current + 1}: ${q.question}`;
+      const optionsHTML = ['A', 'B', 'C', 'D'].map(opt => `
+        <div class="option-box" onclick="selectOption('${opt}')">
+          ${q[opt]}
+        </div>
+      `).join("");
+      document.getElementById("optionsContainer").innerHTML = optionsHTML;
+    }
+
+    function selectOption(opt) {
+      answers[current] = opt;
+    }
+
+    function nextQuestion() {
+      if (current < questions.length - 1) {
+        current++;
+        showQuestion();
+      }
+    }
+
+    function prevQuestion() {
+      if (current > 0) {
+        current--;
+        showQuestion();
+      }
+    }
+
+    function submitQuiz() {
+      clearInterval(interval);
+      const total = questions.length;
+      let correct = 0;
+
+      questions.forEach((q, i) => {
+        if (answers[i] && q.correct === answers[i]) {
+          correct++;
+        }
+      });
+
+      localStorage.setItem("quizScore", JSON.stringify({
+        total,
+        correct,
+        time: quizTime,
+      }));
+
+      window.location.href = "score-dashboard.html";
+    }
+
+    function startTimer() {
+      interval = setInterval(() => {
+        quizTime--;
+        const minutes = Math.floor(quizTime / 60);
+        const seconds = quizTime % 60;
+        document.getElementById("timer").textContent = `Time Left: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+        if (quizTime <= 0) {
+          clearInterval(interval);
+          alert("⏰ Time's up! Submitting quiz...");
+          submitQuiz();
+        }
+      }, 1000);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MCQs - Part 3 (Representation, Practice, and Procedures)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Calibri', sans-serif;
+      font-size: 12px;
+      background: linear-gradient(to right, #d4fcd9, #b6f5cc);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      color: #2d7f4f;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      margin: 10px 5px 0 0;
+      border: none;
+      border-radius: 8px;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #45a049;
+    }
+
+    .mcq-list {
+      margin-top: 30px;
+    }
+
+    .mcq-item {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 12px;
+    }
+
+    .mcq-item button {
+      margin-top: 10px;
+    }
+
+    .options {
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>PART 3 - Representation, Practice, and Procedures (MCQs)</h2>
+
+    <label>Question:</label>
+    <textarea id="question" rows="2"></textarea>
+
+    <label>Option A:</label>
+    <input type="text" id="opt1" />
+    <label>Option B:</label>
+    <input type="text" id="opt2" />
+    <label>Option C:</label>
+    <input type="text" id="opt3" />
+    <label>Option D:</label>
+    <input type="text" id="opt4" />
+
+    <label>Correct Option (A/B/C/D):</label>
+    <input type="text" id="correct" />
+
+    <button class="btn" onclick="addQuestion()">Add Question</button>
+
+    <div class="mcq-list" id="mcqList"></div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+  <script src="firebase.js"></script>
+
+  <script>
+    const db = firebase.firestore();
+    const part = "Part-3";
+
+    async function addQuestion() {
+      const q = document.getElementById("question").value;
+      const opt1 = document.getElementById("opt1").value;
+      const opt2 = document.getElementById("opt2").value;
+      const opt3 = document.getElementById("opt3").value;
+      const opt4 = document.getElementById("opt4").value;
+      const correct = document.getElementById("correct").value.toUpperCase();
+
+      if (!q || !opt1 || !opt2 || !opt3 || !opt4 || !"ABCD".includes(correct)) {
+        alert("Please fill all fields and enter correct option (A/B/C/D)");
+        return;
+      }
+
+      await db.collection("mcqs").add({
+        part,
+        question: q,
+        options: [opt1, opt2, opt3, opt4],
+        correct
+      });
+
+      loadQuestions();
+      document.getElementById("question").value = "";
+      document.getElementById("opt1").value = "";
+      document.getElementById("opt2").value = "";
+      document.getElementById("opt3").value = "";
+      document.getElementById("opt4").value = "";
+      document.getElementById("correct").value = "";
+    }
+
+    async function loadQuestions() {
+      const list = document.getElementById("mcqList");
+      list.innerHTML = "";
+      const snapshot = await db.collection("mcqs").where("part", "==", part).get();
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const div = document.createElement("div");
+        div.className = "mcq-item";
+        div.innerHTML = `
+          <b>Q:</b> ${data.question}<br>
+          <div class="options">
+            A. ${data.options[0]}<br>
+            B. ${data.options[1]}<br>
+            C. ${data.options[2]}<br>
+            D. ${data.options[3]}<br>
+            <b>Correct:</b> ${data.correct}
+          </div>
+          <button class="btn" onclick="deleteQuestion('${doc.id}')">Delete</button>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    async function deleteQuestion(id) {
+      await db.collection("mcqs").doc(id).delete();
+      loadQuestions();
+    }
+
+    loadQuestions();
+  </script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Calibri', sans-serif;
+      font-size: 12px;
+      background: linear-gradient(to right, #d4fcd9, #b6f5cc);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .dashboard {
+      max-width: 1000px;
+      margin: auto;
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #2d7f4f;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+    }
+
+    .card {
+      background: #eaffef;
+      padding: 20px;
+      border-radius: 10px;
+      width: 30%;
+      text-align: center;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    .mcq-buttons {
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    button {
+      margin: 10px;
+      padding: 12px 24px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    button:hover {
+      background-color: #3d9442;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <h2>📊 Admin Dashboard</h2>
+
+    <div class="stats">
+      <div class="card">
+        <h3>Total Students</h3>
+        <div id="totalStudents">0</div>
+      </div>
+      <div class="card">
+        <h3>Free Trial</h3>
+        <div id="freeTrial">0</div>
+      </div>
+      <div class="card">
+        <h3>Paid Students</h3>
+        <div id="paidStudents">0</div>
+      </div>
+    </div>
+
+    <div class="mcq-buttons">
+      <h3>🗂️ Manage MCQ by Part</h3>
+      <button onclick="location.href='admin-part1-mcq.html'">📘 Part 1 – Individual Taxation</button>
+      <button onclick="location.href='admin-part2-mcq.html'">📙 Part 2 – Business Taxation</button>
+      <button onclick="location.href='admin-part3-mcq.html'">📕 Part 3 – Representation, Practice, and Procedures</button>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+
+  <!-- Firebase Config -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCpAKZ3Z3rjVBqinm0uW-yZO7iIH7sNeGk",
+      authDomain: "quizappms.firebaseapp.com",
+      projectId: "quizappms",
+      storageBucket: "quizappms.firebasestorage.app",
+      messagingSenderId: "619334780581",
+      appId: "1:619334780581:web:7e2c456372389fa2b7ef4c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
+  <!-- Stats Script -->
+  <script>
+    firebase.auth().onAuthStateChanged((user) => {
+      if (!user) return location.href = "admin-login.html";
+
+      // Count total students
+      db.collection("students").get().then(snapshot => {
+        document.getElementById("totalStudents").textContent = snapshot.size;
+
+        let free = 0;
+        let paid = 0;
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.subscription === "free") free++;
+          else if (data.subscription === "paid") paid++;
+        });
+
+        document.getElementById("freeTrial").textContent = free;
+        document.getElementById("paidStudents").textContent = paid;
+      });
+    });
+  </script>
+</body>
+</html>

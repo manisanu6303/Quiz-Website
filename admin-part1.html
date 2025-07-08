@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin - Part 1 MCQs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Calibri', sans-serif;
+      font-size: 12px;
+      background: linear-gradient(to right, #d4fcd9, #b6f5cc);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      color: #2d7f4f;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin: 6px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 12px;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #3d9442;
+    }
+
+    .mcq-list {
+      margin-top: 30px;
+    }
+
+    .mcq-item {
+      background: #f2fff4;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+    }
+
+    .mcq-actions {
+      margin-top: 8px;
+    }
+
+    .mcq-actions button {
+      margin-right: 10px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>📜 Part 1 – Individual Taxation</h2>
+
+    <form id="addMcqForm">
+      <input type="hidden" id="mcqId" />
+      <label>Chapter</label>
+      <input type="text" id="chapter" required />
+
+      <label>Question</label>
+      <textarea id="question" required></textarea>
+
+      <label>Option A</label>
+      <input type="text" id="optA" required />
+
+      <label>Option B</label>
+      <input type="text" id="optB" required />
+
+      <label>Option C</label>
+      <input type="text" id="optC" required />
+
+      <label>Option D</label>
+      <input type="text" id="optD" required />
+
+      <label>Correct Option (A/B/C/D)</label>
+      <input type="text" id="correct" required maxlength="1" />
+
+      <button class="btn" type="submit">Save MCQ</button>
+    </form>
+
+    <div class="mcq-list" id="mcqList"></div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+
+  <!-- Firebase Configuration -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCpAKZ3Z3rjVBqinm0uW-yZO7iIH7sNeGk",
+      authDomain: "quizappms.firebaseapp.com",
+      projectId: "quizappms",
+      storageBucket: "quizappms.firebasestorage.app",
+      messagingSenderId: "619334780581",
+      appId: "1:619334780581:web:7e2c456372389fa2b7ef4c"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
+  <script>
+    const db = firebase.firestore();
+    const part = "Part 1";
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (!user) return location.href = "admin-login.html";
+      loadMcqs();
+    });
+
+    const mcqForm = document.getElementById("addMcqForm");
+    mcqForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("mcqId").value;
+      const data = {
+        part,
+        chapter: document.getElementById("chapter").value,
+        question: document.getElementById("question").value,
+        A: document.getElementById("optA").value,
+        B: document.getElementById("optB").value,
+        C: document.getElementById("optC").value,
+        D: document.getElementById("optD").value,
+        correct: document.getElementById("correct").value.toUpperCase(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      if (id) {
+        await db.collection("mcq").doc(id).update(data);
+      } else {
+        data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        await db.collection("mcq").add(data);
+      }
+
+      mcqForm.reset();
+      loadMcqs();
+    });
+
+    async function loadMcqs() {
+      const snapshot = await db.collection("mcq")
+        .where("part", "==", part)
+        .orderBy("createdAt", "desc")
+        .get();
+
+      const list = document.getElementById("mcqList");
+      list.innerHTML = "";
+
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const div = document.createElement("div");
+        div.className = "mcq-item";
+        div.innerHTML = `
+          <strong>${d.chapter}</strong><br>
+          ${d.question}<br>
+          A: ${d.A} <br>
+          B: ${d.B} <br>
+          C: ${d.C} <br>
+          D: ${d.D} <br>
+          <span style="color:green; font-weight:bold;">Correct: ${d.correct}</span>
+          <div class="mcq-actions">
+            <button class="btn" onclick='editMcq("${doc.id}", ${JSON.stringify(d).replace(/'/g, "\'").replace(/"/g, '&quot;')})'>✏️ Edit</button>
+            <button class="btn" onclick="deleteMcq('${doc.id}')">🗑️ Delete</button>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function deleteMcq(id) {
+      if (confirm("Are you sure you want to delete this MCQ?")) {
+        db.collection("mcq").doc(id).delete().then(loadMcqs);
+      }
+    }
+
+    function editMcq(id, data) {
+      document.getElementById("mcqId").value = id;
+      document.getElementById("chapter").value = data.chapter;
+      document.getElementById("question").value = data.question;
+      document.getElementById("optA").value = data.A;
+      document.getElementById("optB").value = data.B;
+      document.getElementById("optC").value = data.C;
+      document.getElementById("optD").value = data.D;
+      document.getElementById("correct").value = data.correct;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>

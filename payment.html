@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Payment</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Calibri', sans-serif;
+      font-size: 12px;
+      background: linear-gradient(to right, #d4fcd9, #b6f5cc);
+      padding: 30px;
+    }
+
+    .payment-box {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    h2 {
+      color: #2d7f4f;
+    }
+
+    .amount {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #3d9442;
+    }
+  </style>
+</head>
+<body>
+  <div class="payment-box">
+    <h2>💳 Upgrade Your Access</h2>
+    <div id="summaryText"></div>
+    <div class="amount" id="amountDisplay">Calculating...</div>
+    <button onclick="payNow()">Proceed to Payment</button>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const part = urlParams.get('part');
+    const country = urlParams.get('country') || 'Other';
+    const upgrade = urlParams.get('upgrade') === 'true';
+
+    const summaryText = document.getElementById("summaryText");
+    const amountDisplay = document.getElementById("amountDisplay");
+
+    let amount = 0;
+
+    // Simulate upgrade timing logic (you can replace with Firestore timestamp check)
+    const within24Hours = true; // Change as needed for actual logic
+
+    if (country === "India") {
+      amount = within24Hours ? 599 : 650;
+    } else {
+      amount = within24Hours ? 15 : 20;
+    }
+
+    summaryText.innerHTML = `
+      <p>You're upgrading for <strong>${part}</strong></p>
+      <p>Region: <strong>${country}</strong></p>
+    `;
+
+    amountDisplay.innerText = country === "India"
+      ? `₹${amount}`
+      : `$${amount}`;
+
+    function payNow() {
+      alert("Redirecting to payment gateway...");
+      // Here you can add Razorpay or Stripe integration
+    }
+  </script>
+</body>
+</html>

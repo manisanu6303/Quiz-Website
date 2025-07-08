@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Quiz Setup - QuizAppMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: 'Calibri', sans-serif;
+      font-size: 12px;
+      background: linear-gradient(to right, #d4fcd9, #b6f5cc);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      margin: 0;
+    }
+
+    .setup-box {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 460px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #2d7f4f;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-weight: bold;
+    }
+
+    select, .btn, input[type="radio"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .btn {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #45a049;
+    }
+
+    .count-options {
+      display: none;
+    }
+
+    .option-buttons label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .option-buttons input {
+      width: auto;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="setup-box">
+    <h2>How Do You Want to Practice?</h2>
+
+    <label>Choose Mode:</label>
+    <select id="mode" onchange="handleModeChange()">
+      <option value="">Select</option>
+      <option value="chapter">Chapter-wise</option>
+      <option value="random">Random</option>
+    </select>
+
+    <div id="countBox" class="count-options">
+      <label>How Many Questions?</label>
+      <div class="option-buttons">
+        <label><input type="radio" name="qCount" value="10">10</label>
+        <label><input type="radio" name="qCount" value="20">20</label>
+        <label><input type="radio" name="qCount" value="50">50</label>
+        <label><input type="radio" name="qCount" value="70">70</label>
+        <label><input type="radio" name="qCount" value="100">100</label>
+      </div>
+    </div>
+
+    <button class="btn" onclick="startQuiz()">Start Quiz</button>
+  </div>
+
+  <script>
+    function handleModeChange() {
+      const mode = document.getElementById("mode").value;
+      const countBox = document.getElementById("countBox");
+      countBox.style.display = (mode === "random") ? "block" : "none";
+    }
+
+    function startQuiz() {
+      const mode = document.getElementById("mode").value;
+      let qCount = 0;
+      if (mode === "random") {
+        const selected = document.querySelector('input[name="qCount"]:checked');
+        if (!selected) {
+          alert("Please select number of questions.");
+          return;
+        }
+        qCount = parseInt(selected.value);
+      }
+
+      sessionStorage.setItem("quizMode", mode);
+      sessionStorage.setItem("questionCount", qCount);
+      location.href = "quiz.html";
+    }
+  </script>
+</body>
+</html>
