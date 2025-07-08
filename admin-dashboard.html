@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Calibri, sans-serif;
+      font-size: 12px;
+      background: linear-gradient(to right, #d4fcd9, #b6f5cc);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .dashboard {
+      max-width: 1000px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #2d7f4f;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 30px;
+    }
+
+    .card {
+      background: #e9fff0;
+      padding: 20px;
+      border-radius: 10px;
+      width: 30%;
+      text-align: center;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    .mcq-section {
+      margin-top: 40px;
+    }
+
+    .mcq-grid {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .mcq-folder {
+      background: #f0fff8;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    .logout-btn {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      background: #d9534f;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .logout-btn:hover {
+      background: #c9302c;
+    }
+  </style>
+</head>
+<body>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+
+  <div class="dashboard">
+    <h2>📊 Admin Dashboard</h2>
+
+    <div class="stats">
+      <div class="card">
+        <h3>Total Students</h3>
+        <p id="totalStudents">--</p>
+      </div>
+      <div class="card">
+        <h3>Free Trial</h3>
+        <p id="freeTrial">--</p>
+      </div>
+      <div class="card">
+        <h3>Paid</h3>
+        <p id="paidStudents">--</p>
+      </div>
+    </div>
+
+    <div class="mcq-section">
+      <h2>📁 MCQ Material</h2>
+      <div class="mcq-grid">
+        <div class="mcq-folder" onclick="location.href='admin-part1-mcq.html'">
+          Part 1 – Individual Taxation
+        </div>
+        <div class="mcq-folder" onclick="location.href='admin-part2-mcq.html'">
+          Part 2 – Business Taxation
+        </div>
+        <div class="mcq-folder" onclick="location.href='admin-part3-mcq.html'">
+          Part 3 – Representation, Practice, and Procedures
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+
+  <!-- Firebase Config + App Init -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCpAKZ3Z3rjVBqinm0uW-yZO7iIH7sNeGk",
+      authDomain: "quizappms.firebaseapp.com",
+      projectId: "quizappms",
+      storageBucket: "quizappms.firebasestorage.app",
+      messagingSenderId: "619334780581",
+      appId: "1:619334780581:web:7e2c456372389fa2b7ef4c",
+      measurementId: "G-J1H9PB9S7E"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+  </script>
+
+  <!-- Admin Auth + Data Count -->
+  <script>
+    auth.onAuthStateChanged(async user => {
+      if (!user) return location.href = "admin-login.html";
+
+      const doc = await db.collection("users").doc(user.uid).get();
+      if (!doc.exists || doc.data().role !== "admin") {
+        alert("Access denied");
+        auth.signOut();
+        return;
+      }
+
+      // Load stats
+      const studentsSnapshot = await db.collection("users").where("role", "==", "student").get();
+      const total = studentsSnapshot.size;
+      let free = 0, paid = 0;
+
+      studentsSnapshot.forEach(doc => {
+        const type = doc.data().accessType;
+        if (type === "free") free++;
+        if (type === "paid") paid++;
+      });
+
+      document.getElementById("totalStudents").textContent = total;
+      document.getElementById("freeTrial").textContent = free;
+      document.getElementById("paidStudents").textContent = paid;
+    });
+
+    function logout() {
+      auth.signOut().then(() => location.href = "admin-login.html");
+    }
+  </script>
+</body>
+</html>
